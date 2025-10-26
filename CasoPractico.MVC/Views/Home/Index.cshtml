@@ -1,0 +1,118 @@
+﻿@model IEnumerable<CasoPractico.Model.DTOs.TaskDTO>
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Tasks";
+}
+<div class="text-center">
+    <h1 class="display-4 mb-4">Tasks</h1>
+
+    <div class="row mb-4">
+        <div class="col">
+            <div class="border border-1 bg-body-secondary rounded-2 border-dark-subtle p-3 d-flex justify-content-center gap-2">
+                <span class="text-muted">Number of Tasks</span>
+                <span class="fw-semibold">@((Model?.Count()) ?? 0)</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="mb-4 text-center">
+            <button id="addTaskBtn" class="btn btn-primary">+ Add Task</button>
+        </div>
+
+        <div id="addTaskForm" class="container mb-4 d-none">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-6 border p-3 rounded bg-white shadow-sm">
+                    <h5 class="mb-3">New Task</h5>
+                    <input id="newName" type="text" class="form-control mb-2" placeholder="Name" />
+                    <textarea id="newDescription" class="form-control mb-2" placeholder="Description"></textarea>
+                    <input id="createdBy" type="email" class="form-control mb-3" placeholder="Reporter email" />
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button id="saveTaskBtn" class="btn btn-success">Save</button>
+                        <button id="cancelTaskBtn" class="btn btn-outline-danger">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model is not null && Model.Any())
+        {
+            <div class="row g-3 justify-content-center">
+                @foreach (var item in Model)
+                {
+                    var statusText = (item.Status ?? "").Trim();
+                    var statusNorm = statusText.ToUpperInvariant();                 
+                    var isOpen = statusNorm == "OPEN" || statusNorm == "PENDING" || statusNorm == "TRUE";
+
+                    <div id="Task-@item.Id" class="col-12 col-sm-6 col-lg-4">
+                        <div class="border border-1 bg-body-secondary rounded-2 border-light-subtle py-3 px-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-dark ps-1 fw-semibold">Task Id# @item.Id</span>
+
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Actions
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" data-id="@item.Id" id="edit-@item.Id" href="#">Edit</a></li>
+                                        <li><a class="dropdown-item text-danger" href="#" data-id="@item.Id" id="delete-@item.Id">Delete</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="mt-2">
+                                @if (isOpen)
+                                {
+                                    <span class="badge text-bg-success" id="status-open-@item.Id">@statusText</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-danger" id="status-close-@item.Id">@statusText</span>
+                                }
+
+                                @if (item.Approved.HasValue)
+                                {
+                                    if (item.Approved.Value)
+                                    {
+                                        <span class="badge text-bg-primary ms-2">Approved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge text-bg-secondary ms-2">Pending approval</span>
+                                    }
+                                }
+                            </div>
+
+                            <div class="mt-3">
+                                <p class="fw-bold mb-1" data-field="name" id="name-@item.Id">@item.Name</p>
+                                <p class="mb-2 text-muted" data-field="description" id="description-@item.Id">
+                                    @(string.IsNullOrWhiteSpace(item.Description) ? "—" : item.Description)
+                                </p>
+                            </div>
+
+                            <div class="row text-dark justify-content-between small">
+                                <div class="col text-start" id="dueDate-@item.Id">
+                                    <strong>Due:</strong> @item.DueDate.ToString("yyyy-MM-dd")
+                                </div>
+                                <div class="col text-end" id="createdDate-@item.Id">
+                                    <strong>Created:</strong> @(item.CreatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">No tasks yet.</div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        window.tasksData = @Html.Raw(JsonSerializer.Serialize(Model ?? Enumerable.Empty<CasoPractico.Model.DTOs.TaskDTO>()));
+    </script>
+    <script src="~/js/task.js" asp-append-version="true"></script>
+}

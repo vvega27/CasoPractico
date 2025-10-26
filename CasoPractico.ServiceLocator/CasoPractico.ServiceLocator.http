@@ -1,0 +1,6 @@
+@CasoPractico.ServiceLocator_HostAddress = http://localhost:5037
+
+GET {{CasoPractico.ServiceLocator_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

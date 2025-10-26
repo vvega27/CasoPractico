@@ -1,0 +1,6 @@
+@ServiceLocator.MVC_HostAddress = http://localhost:5019
+
+GET {{ServiceLocator.MVC_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
