@@ -1,31 +1,52 @@
-using CasoPractico.Model.DTOs;
+﻿using CasoPractico.Model.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
-namespace MVC.Controllers
+namespace CasoPractico.MVC.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly HttpClient _httpClient;
-
+        private readonly HttpClient _http;
 
         public HomeController(IHttpClientFactory factory)
         {
-            _httpClient = factory.CreateClient("CasoPractico");
+            _http = factory.CreateClient("CasoPractico");
         }
 
         public async Task<IActionResult> Index()
         {
-            List<TaskDTO>? tasks = [];
             try
             {
-                tasks = await _httpClient.GetFromJsonAsync<List<TaskDTO>>("api/tasks");
+                var resp = await _http.GetAsync("api/Tasks");
+                if (!resp.IsSuccessStatusCode)
+                {
+                    var body = await resp.Content.ReadAsStringAsync();
+                    TempData["ApiError"] = $"API GET /api/Tasks → {(int)resp.StatusCode} {resp.ReasonPhrase}. Body: {body}";
+                    return View(new List<TaskDTO>());
+                }
+
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var stream = await resp.Content.ReadAsStreamAsync();
+                var tasks = await JsonSerializer.DeserializeAsync<List<TaskDTO>>(stream, options) ?? new List<TaskDTO>();
+
+                tasks = tasks
+                    .OrderByDescending(t => t.Approved == true) 
+                    .ThenBy(t => t.DueDate)
+                    .ToList();
+
+                return View(tasks);
             }
             catch (Exception ex)
             {
-                TempData["ApiError"] = $"No pude contactar el API: {ex.Message}";
+                TempData["ApiError"] = $"Fallo al contactar la API: {ex.Message}";
+                return View(new List<TaskDTO>());
             }
+        }
 
-            return View(tasks);
+        [HttpGet]
+        public IActionResult Login()
+        {
+            return View();
         }
     }
 }

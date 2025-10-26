@@ -3,8 +3,14 @@
 @{
     ViewData["Title"] = "Tasks";
 }
+
 <div class="text-center">
     <h1 class="display-4 mb-4">Tasks</h1>
+
+    @if (TempData["ApiError"] is string apiErr)
+    {
+        <div class="alert alert-danger text-start">@apiErr</div>
+    }
 
     <div class="row mb-4">
         <div class="col">
@@ -22,11 +28,27 @@
 
         <div id="addTaskForm" class="container mb-4 d-none">
             <div class="row justify-content-center">
-                <div class="col-12 col-lg-6 border p-3 rounded bg-white shadow-sm">
+                <div class="col-12 col-lg-7 border p-3 rounded bg-white shadow-sm text-start">
                     <h5 class="mb-3">New Task</h5>
+
+                    <label class="form-label">Name</label>
                     <input id="newName" type="text" class="form-control mb-2" placeholder="Name" />
+
+                    <label class="form-label">Description</label>
                     <textarea id="newDescription" class="form-control mb-2" placeholder="Description"></textarea>
-                    <input id="createdBy" type="email" class="form-control mb-3" placeholder="Reporter email" />
+
+                    <div class="row">
+                        <div class="col">
+                            <label class="form-label">Due date</label>
+                            <input id="newDueDate" type="date" class="form-control mb-2" />
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Created at (UTC)</label>
+                            <input id="newCreatedAt" type="datetime-local" class="form-control mb-2"
+                                   value="@DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm")" />
+                        </div>
+                    </div>
+
                     <div class="d-flex gap-2 justify-content-end">
                         <button id="saveTaskBtn" class="btn btn-success">Save</button>
                         <button id="cancelTaskBtn" class="btn btn-outline-danger">Cancel</button>
@@ -37,11 +59,11 @@
 
         @if (Model is not null && Model.Any())
         {
-            <div class="row g-3 justify-content-center">
+            <div class="row g-3 justify-content-center" id="cardsRow">
                 @foreach (var item in Model)
                 {
                     var statusText = (item.Status ?? "").Trim();
-                    var statusNorm = statusText.ToUpperInvariant();                 
+                    var statusNorm = statusText.ToUpperInvariant();
                     var isOpen = statusNorm == "OPEN" || statusNorm == "PENDING" || statusNorm == "TRUE";
 
                     <div id="Task-@item.Id" class="col-12 col-sm-6 col-lg-4">
@@ -81,6 +103,30 @@
                                         <span class="badge text-bg-secondary ms-2">Pending approval</span>
                                     }
                                 }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary ms-2">Pending approval</span>
+                                }
+                            </div>
+
+                            <div class="mt-2 d-flex gap-2 align-items-center flex-wrap" id="inline-edit-@item.Id">
+                                <!-- Guardamos el valor actual en data-* y dejamos las opciones sin C# -->
+                                <select id="statusSel-@item.Id"
+                                        class="form-select form-select-sm w-auto"
+                                        data-current-status="@((item.Status ?? "Pending").Trim())">
+                                    <option value="Open">Open</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Closed">Closed</option>
+                                </select>
+
+                                <select id="approvedSel-@item.Id"
+                                        class="form-select form-select-sm w-auto"
+                                        data-current-approved="@(item.Approved == true ? "true" : "null")">
+                                    <option value="true">Approved</option>
+                                    <option value="null">Pending</option>
+                                </select>
+
+                                <button class="btn btn-sm btn-outline-primary btn-update" data-id="@item.Id">Update</button>
                             </div>
 
                             <div class="mt-3">
@@ -105,14 +151,71 @@
         }
         else
         {
-            <div class="alert alert-info">No tasks yet.</div>
+            <div class="alert alert-info">No tasks to see over here 0.0.</div>
         }
     </div>
 </div>
 
+@section Modals {
+
+  <div class="modal fade" id="editTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-start">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit task</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editId" />
+          <div class="mb-2">
+            <label class="form-label">Name</label>
+            <input id="editName" type="text" class="form-control" />
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Description</label>
+            <textarea id="editDescription" class="form-control"></textarea>
+          </div>
+          <div class="row">
+            <div class="col">
+              <label class="form-label">Due date</label>
+              <input id="editDueDate" type="date" class="form-control" />
+            </div>
+            <div class="col">
+              <label class="form-label">Created at (UTC)</label>
+              <input id="editCreatedAt" type="datetime-local" class="form-control" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="editSaveBtn" type="button" class="btn btn-primary">Save</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+}
+<div id="toastZone" class="toast-container position-fixed top-0 end-0 p-3"></div>
+}
 @section Scripts {
     <script>
-        window.tasksData = @Html.Raw(JsonSerializer.Serialize(Model ?? Enumerable.Empty<CasoPractico.Model.DTOs.TaskDTO>()));
+        window.tasksData = @Html.Raw(JsonSerializer.Serialize(
+                Model ?? Enumerable.Empty<CasoPractico.Model.DTOs.TaskDTO>()
+            ));
+
+    function initInlineEditorsRazor() {
+      document.querySelectorAll('select[id^="statusSel-"]').forEach(sel => {
+        const v = (sel.dataset.currentStatus || '').trim();
+        sel.value = (["Open","Pending","Closed"].includes(v) ? v : "Pending");
+      });
+      document.querySelectorAll('select[id^="approvedSel-"]').forEach(sel => {
+        const v = (sel.dataset.currentApproved || 'null').trim();
+        sel.value = (v === "true" ? "true" : "null");
+      });
+    }
+
+        document.addEventListener('DOMContentLoaded', initInlineEditorsRazor);
     </script>
+
     <script src="~/js/task.js" asp-append-version="true"></script>
 }

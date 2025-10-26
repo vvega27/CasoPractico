@@ -58,7 +58,6 @@ public class TaskBusiness(IRepositoryTask repositoryTask) : ITaskBusiness
     /// </inheritdoc>
     public async Task<bool> CreateTasksAsync(Task task)
     {
-
         return await repositoryTask.CreateAsync(task);
     }
 }
