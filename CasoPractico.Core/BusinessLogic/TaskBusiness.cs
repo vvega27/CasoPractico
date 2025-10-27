@@ -1,5 +1,6 @@
 ﻿using CasoPractico.Data.Repositories;
 using System.Net.Sockets;
+using System.Text;
 using Task= CasoPractico.Data.Models.Task;
 
 
@@ -36,9 +37,31 @@ public class TaskBusiness(IRepositoryTask repositoryTask) : ITaskBusiness
     /// </inheritdoc>
     public async Task<bool> SaveTaskAsync(Task Task)
     {
-        // que tengan mas de 5 quantity
-        // sabado o domingo solo puedo salvar de 8 a 12
-        return await repositoryTask.UpdateAsync(Task);
+        var current = await repositoryTask.FindAsync(Task.Id);
+        if (current == null) return false;
+
+        var createdAtUtc = (current.CreatedAt?.ToUniversalTime()) ?? DateTime.UtcNow;
+        if (current.Approved == false && Task.Approved == true)
+        {
+            var hours = (DateTime.UtcNow - createdAtUtc).TotalHours;
+            if (hours > 24)
+                return false; 
+        }
+
+        current.Name = string.IsNullOrWhiteSpace(Task.Name) ? current.Name : Task.Name;
+        current.Description = Task.Description ?? current.Description;
+
+        if (string.IsNullOrWhiteSpace(Task.Status))
+            current.Status = string.IsNullOrWhiteSpace(current.Status) ? "Pending" : current.Status;
+        else
+            current.Status = Task.Status;
+
+        current.DueDate = Task.DueDate == default ? current.DueDate : Task.DueDate;
+        current.CreatedAt = Task.CreatedAt ?? current.CreatedAt;
+
+        current.Approved = Task.Approved ?? current.Approved;
+
+        return await repositoryTask.UpdateAsync(current);
     }
 
     /// </inheritdoc>

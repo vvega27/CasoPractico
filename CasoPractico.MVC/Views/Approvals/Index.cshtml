@@ -1,0 +1,53 @@
+﻿@model IEnumerable<CasoPractico.Model.DTOs.TaskDTO>
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Approvals";
+}
+
+<h2 class="mb-3">Approvals</h2>
+
+@if (TempData["ApiError"] is string apiErr)
+{
+    <div class="alert alert-danger">@apiErr</div>
+}
+
+<div class="row g-3" id="approvalsRow">
+    @foreach (var t in Model)
+    {
+        var approvedBadge = t.Approved == true ? "Approved" : (t.Approved == false ? "Denied" : "Pending");
+        var badgeClass = t.Approved == true ? "text-bg-primary" : (t.Approved == false ? "text-bg-secondary" : "text-bg-warning");
+
+        <div class="col-12 col-md-6 col-lg-4" id="card-@t.Id">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong>Task #@t.Id</strong>
+                        <span class="badge @badgeClass">@approvedBadge</span>
+                    </div>
+
+                    <div class="small text-muted mb-2">@t.Status</div>
+
+                    <div class="fw-semibold">@t.Name</div>
+                    <div class="text-muted mb-2">@((t.Description ?? "—"))</div>
+
+                    <div class="d-flex justify-content-between small mb-3">
+                        <span>Due: @t.DueDate.ToString("yyyy-MM-dd")</span>
+                        <span>Created: @(t.CreatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "—")</span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success btn-sm btn-approve" data-id="@t.Id">Approve</button>
+                        <button class="btn btn-outline-secondary btn-sm btn-deny" data-id="@t.Id">Deny</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        window.approvalsData = @Html.Raw(JsonSerializer.Serialize(Model ?? Enumerable.Empty<CasoPractico.Model.DTOs.TaskDTO>()));
+    </script>
+    <script src="~/js/approvals.js" asp-append-version="true"></script>
+}

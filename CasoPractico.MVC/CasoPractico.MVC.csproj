@@ -12,10 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\CasoPractico.API\CasoPractico.API.csproj" />
     <ProjectReference Include="..\CasoPractico.Core\CasoPractico.Core.csproj" />
     <ProjectReference Include="..\CasoPractico.Data\CasoPractico.Data.csproj" />

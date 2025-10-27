@@ -23,6 +23,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ITaskBusiness, TaskBusiness>();
 builder.Services.AddScoped<IRepositoryTask, RepositoryTask>();
+builder.Services.AddScoped<IRoleRepository, RepositoryRole>();
+builder.Services.AddScoped<IRoleBusiness, RoleBusiness>();
 
 var app = builder.Build();
 

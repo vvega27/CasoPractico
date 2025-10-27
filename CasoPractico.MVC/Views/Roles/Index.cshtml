@@ -1,0 +1,53 @@
+﻿@model IEnumerable<CasoPractico.Model.DTOs.UserRoleDTO>
+@using CasoPractico.Model.DTOs
+@{
+    ViewData["Title"] = "Roles";
+    var roles = ViewBag.AvailableRoles as List<RoleDTO> ?? new();
+}
+
+<h2 class="mb-3">Roles</h2>
+
+@if (TempData["ApiError"] is string apiErr)
+{
+    <div class="alert alert-danger">@apiErr</div>
+}
+
+<table class="table table-striped align-middle" id="rolesTable">
+  <thead>
+    <tr>
+      <th>UserId</th>
+      <th>Username</th>
+      <th>Email</th>
+      <th>IsActive</th>
+      <th>Role</th>
+      <th style="width:120px;"></th>
+    </tr>
+  </thead>
+  <tbody>
+  @foreach (var u in Model)
+  {
+    <tr data-user="@u.UserId">
+      <td>@u.UserId</td>
+      <td>@u.Username</td>
+      <td>@u.Email</td>
+      <td>@(u.IsActive ? "Yes" : "No")</td>
+      <td>
+          <select class="form-select form-select-sm roleSel">
+          @foreach (var r in roles)
+          {
+          var isSelected = (u.RoleId == r.RoleId); 
+          <option value="@r.RoleId" selected="@(isSelected ? "selected" : null)">@r.RoleName</option>
+          }
+          </select>
+      </td>
+      <td>
+        <button class="btn btn-sm btn-primary saveRoleBtn">Save</button>
+      </td>
+    </tr>
+  }
+  </tbody>
+</table>
+
+@section Scripts {
+  <script src="~/js/roles.js" asp-append-version="true"></script>
+}

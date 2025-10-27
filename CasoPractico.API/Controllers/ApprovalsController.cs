@@ -2,13 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
-namespace CasoPractico.MVC.Controllers
+namespace CasoPractico.API.Controllers
 {
-    public class HomeController : Controller
+    public class ApprovalsController : Controller
     {
         private readonly HttpClient _http;
-
-        public HomeController(IHttpClientFactory factory)
+        public ApprovalsController(IHttpClientFactory factory)
         {
             _http = factory.CreateClient("CasoPractico");
         }
@@ -26,29 +25,23 @@ namespace CasoPractico.MVC.Controllers
                 }
 
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var stream = await resp.Content.ReadAsStreamAsync();
-                var all = await JsonSerializer.DeserializeAsync<List<TaskDTO>>(stream, options) ?? new();
+                var tasks = await JsonSerializer.DeserializeAsync<List<TaskDTO>>(
+                    await resp.Content.ReadAsStreamAsync(), options
+                ) ?? new();
 
-                
-                var tasks = all
-                    .Where(t => t.Approved.HasValue)
-                    .OrderByDescending(t => t.Approved == true) 
+                var ordered = tasks
+                    .OrderBy(t => t.Approved.HasValue)               
+                    .ThenByDescending(t => t.Approved == true)      
                     .ThenBy(t => t.DueDate)
                     .ToList();
 
-                return View(tasks);
+                return View(ordered);
             }
             catch (Exception ex)
             {
                 TempData["ApiError"] = $"Fallo al contactar la API: {ex.Message}";
                 return View(new List<TaskDTO>());
             }
-        }
-
-        [HttpGet]
-        public IActionResult Login()
-        {
-            return View();
         }
     }
 }

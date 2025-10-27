@@ -1,6 +1,6 @@
 ﻿using CasoPractico.Model.DTOs;
 
-namespace MVC.Models
+namespace CasoPractico.MVC.Models
 {
     public class HomeViewModel
     {

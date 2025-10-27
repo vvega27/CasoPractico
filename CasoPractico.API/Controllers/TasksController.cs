@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Net.Sockets;
+﻿using Microsoft.AspNetCore.Mvc;
 using CasoPractico.Core.BusinessLogic;
 using Task = CasoPractico.Data.Models.Task;
 
@@ -33,9 +31,15 @@ namespace CasoPractico.API.Controllers
 
         // PUT api/<TasksController>/5
         [HttpPut("{id}")]
-        public async Task<bool> Put(int id, [FromBody] Task value)
+        public async Task<IActionResult> Put(int id, [FromBody] Task value)
         {
-            return await TaskBusiness.SaveTaskAsync(value);
+            if (id != value.Id) return BadRequest("Id mismatch");
+
+            var ok = await TaskBusiness.SaveTaskAsync(value);
+            if (!ok)
+                return BadRequest("No se puede APROBAR una solicitud denegada con más de 24h desde su creación (UTC).");
+
+            return Ok(value);
         }
 
         // DELETE api/<TasksController>/5
