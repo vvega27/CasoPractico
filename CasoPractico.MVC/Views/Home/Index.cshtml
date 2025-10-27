@@ -119,11 +119,12 @@
                                 </select>
 
                                 <select id="approvedSel-@item.Id"
-                                        class="form-select form-select-sm w-auto"
+                                        class="form-select form-select-sm w-auto d-none"
                                         data-current-approved="@(item.Approved == true ? "true" : "null")">
                                     <option value="true">Approved</option>
                                     <option value="null">Pending</option>
                                 </select>
+                                <span class="badge text-bg-secondary">@item.Status</span>
 
                                 <button class="btn btn-sm btn-outline-primary btn-update" data-id="@item.Id">Update</button>
                             </div>
