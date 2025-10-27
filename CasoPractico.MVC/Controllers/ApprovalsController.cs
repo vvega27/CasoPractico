@@ -1,8 +1,9 @@
 ﻿using CasoPractico.Model.DTOs;
+using CasoPractico.MVC.Filters;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
-namespace CasoPractico.API.Controllers
+namespace CasoPractico.MVC.Controllers
 {
     public class ApprovalsController : Controller
     {

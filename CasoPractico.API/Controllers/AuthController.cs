@@ -3,12 +3,7 @@ using Microsoft.Data.SqlClient;
 using System.Data;
 
 namespace CasoPractico.API.Controllers
-
 {
-    public record LoginRequest(string Email, string Password);
-    public record LoginUserDto(int UserId, string Username, string Email, bool IsActive, DateTime? LastLogin);
-    public record RoleDto(int RoleId, string RoleName);
-
     [ApiController]
     [Route("api")]
     public class AuthController : ControllerBase
@@ -16,15 +11,17 @@ namespace CasoPractico.API.Controllers
         private readonly IConfiguration _cfg;
         public AuthController(IConfiguration cfg) => _cfg = cfg;
 
+        public record LoginRequest(string Email, string Password);
+        public record LoginUserDto(int UserId, string Username, string Email, bool IsActive, DateTime? LastLogin);
+        public record RoleDto(int RoleId, string RoleName);
+
         [HttpPost("login")]
         public async Task<ActionResult<LoginUserDto>> Login([FromBody] LoginRequest req)
         {
             if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
                 return BadRequest("Email and password are required");
 
-            // no pass en la bd
-            const string DummyPassword = "admin";
-            if (req.Password != DummyPassword) return Unauthorized("Invalid credentials");
+            if (req.Password != "admin") return Unauthorized("Invalid credentials");
 
             var cs = _cfg.GetConnectionString("DefaultConnection");
             await using var con = new SqlConnection(cs);

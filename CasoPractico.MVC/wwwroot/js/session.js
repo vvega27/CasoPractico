@@ -10,7 +10,6 @@
     const navRoles = $("navRoles");
     const navLogout = $("navLogout");
 
-    // evitar errores
     document.body.classList.remove("preauth");
 
     const isManagerOrAdmin = () => {

@@ -16,6 +16,7 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowAnyHeader());
 });
+builder.Services.AddSession();
 
 var app = builder.Build();
 
@@ -28,24 +29,18 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-// Enable static files middleware
 app.UseStaticFiles();
-// Enable routing middleware
-
 app.UseRouting();
-// Enable CORS middleware
+
 app.UseCors("AllowAll");
-// Enable authorization middleware
+app.UseSession();
 app.UseAuthorization();
 
 //MVC 
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Login}/{id?}");
-
-// for Razor
+    pattern: "{controller=Login}/{action=Index}/{id?}");
 
 app.MapRazorPages();
 

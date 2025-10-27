@@ -1,9 +1,12 @@
 ﻿using CasoPractico.Model.DTOs;
+using CasoPractico.MVC.Filters;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
 namespace CasoPractico.MVC.Controllers
 {
+
     public class HomeController : Controller
     {
         private readonly HttpClient _http;
@@ -29,11 +32,9 @@ namespace CasoPractico.MVC.Controllers
                 var stream = await resp.Content.ReadAsStreamAsync();
                 var all = await JsonSerializer.DeserializeAsync<List<TaskDTO>>(stream, options) ?? new();
 
-                
                 var tasks = all
-                    .Where(t => t.Approved.HasValue)
-                    .OrderByDescending(t => t.Approved == true) 
-                    .ThenBy(t => t.DueDate)
+                    .Where(t => t.Approved == true)        
+                    .OrderBy(t => t.DueDate)
                     .ToList();
 
                 return View(tasks);
@@ -45,6 +46,7 @@ namespace CasoPractico.MVC.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult Login()
         {

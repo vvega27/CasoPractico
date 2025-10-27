@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CasoPractico.Model.DTOs;
+using CasoPractico.MVC.Filters;
+using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
-using CasoPractico.Model.DTOs;
 
 namespace CasoPractico.MVC.Controllers
 {
